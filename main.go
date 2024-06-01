@@ -1,13 +1,15 @@
 package main
 
 import (
+	"FinalTaskAPI/database"
 	"FinalTaskAPI/router"
-	"fmt"
+	"os"
 )
 
 func main() {
-	fmt.Print("Hello, World!")
-	r := router.StartApp()
+	database.StartDB()
+	var PORT = os.Getenv("PORT")
 
-	r.Run(":8080")
+	r := router.StartApp()
+	r.Run(":" + PORT)
 }
