@@ -5,14 +5,11 @@ import (
 	"FinalTaskAPI/helpers"
 	"FinalTaskAPI/models"
 	"net/http"
+	"strconv"
 
 	"github.com/dgrijalva/jwt-go"
 
 	"github.com/gin-gonic/gin"
-
-	"errors"
-
-	"gorm.io/gorm"
 )
 
 func CreatePhoto(c *gin.Context) {
@@ -20,7 +17,6 @@ func CreatePhoto(c *gin.Context) {
 	userData := c.MustGet("userData").(jwt.MapClaims)
 	contentType := helpers.GetContentType(c)
 
-	User := models.User{}
 	Photo := models.Photo{}
 	userID := uint(userData["id"].(float64))
 
@@ -31,33 +27,22 @@ func CreatePhoto(c *gin.Context) {
 	}
 
 	Photo.UserID = userID
-	Photo.User = &User
 
-	err := db.Where("id = ?", userID).First(&Photo).Error
+	err := db.Debug().Create(&Photo).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err = db.Debug().Create(&Photo).Error
-			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error":   "Bad Request",
-					"message": err.Error(),
-				})
-				return
-			}
-			c.JSON(http.StatusCreated, gin.H{
-				"data": Photo,
-			})
-			return
-		}
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Bad Request",
-			"message": "User already has a profile photo",
+			"message": err.Error(),
 		})
 		return
 	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"data": Photo,
+	})
 }
 
-func GetPhotos(c *gin.Context) {
+func GetPhoto(c *gin.Context) {
 	db := database.GetDB()
 	userData := c.MustGet("userData").(jwt.MapClaims)
 	userID := uint(userData["id"].(float64))
@@ -71,7 +56,73 @@ func GetPhotos(c *gin.Context) {
 		})
 		return
 	}
+
+	for i := range photos {
+		photos[i].User.Password = ""
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"data": photos,
+	})
+}
+
+func EditPhoto(c *gin.Context) {
+	db := database.GetDB()
+	userData := c.MustGet("userData").(jwt.MapClaims)
+	contentType := helpers.GetContentType(c)
+	Photo := models.Photo{}
+
+	photoID, _ := strconv.Atoi(c.Param("photoID"))
+	userID := uint(userData["id"].(float64))
+
+	if contentType == appJSON {
+		c.ShouldBindJSON(&Photo)
+	} else {
+		c.ShouldBind(&Photo)
+	}
+
+	Photo.UserID = userID
+	Photo.ID = uint(photoID)
+
+	err := db.Model(&Photo).Where("id = ?", photoID).Updates(models.Photo{Title: Photo.Title, Caption: Photo.Caption, PhotoUrl: Photo.PhotoUrl}).Error
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"err":     "Bad Request",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Your photo has been successfully updated",
+	})
+}
+
+func DeletePhoto(c *gin.Context) {
+	db := database.GetDB()
+	contentType := helpers.GetContentType(c)
+	Photo := models.Photo{}
+
+	photoID, _ := strconv.Atoi(c.Param("photoID"))
+	Photo.ID = uint(photoID)
+	if contentType == appJSON {
+		c.ShouldBindJSON(&Photo)
+	} else {
+		c.ShouldBind(&Photo)
+	}
+
+	err := db.Where("id = ?", photoID).Delete(&Photo).Error
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"err":     "Bad Request",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Your photo has been successfully deleted",
 	})
 }

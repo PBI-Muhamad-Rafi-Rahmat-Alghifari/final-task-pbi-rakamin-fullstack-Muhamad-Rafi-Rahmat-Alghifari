@@ -8,10 +8,10 @@ import (
 type Photo struct {
 	GormModel
 	Title    string `gorm:"not null" form:"title" json:"title" `
-	Caption  string `gorm:"not null" form:"caption" json:"caption" valid:"required~Caption is required"`
+	Caption  string `gorm:"not null" form:"caption" json:"caption"`
 	PhotoUrl string `gorm:"not null" form:"photo_url" json:"photo_url" valid:"required~Photo Url is required"`
 	UserID   uint
-	User     *User
+	User     *User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"user"`
 }
 
 func (p *Photo) BeforeCreate(tx *gorm.DB) (err error) {

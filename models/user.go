@@ -12,7 +12,7 @@ type User struct {
 	Username string  `gorm:"uniqueIndex;not null" form:"username" json:"username" valid:"required~Username is required"`
 	Email    string  `gorm:"uniqueIndex;not null" form:"email" json:"email" valid:"required~Email is required,email~Invalid email format"`
 	Password string  `gorm:"not null" form:"password" json:"password" valid:"required~Password is required,minstringlength(6)~Password has to have a minimum length of 6 characters"`
-	Photos   []Photo `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"photos"`
+	Photos   []Photo `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {

@@ -13,7 +13,7 @@ import (
 func PhotoAuthorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := database.GetDB()
-		photoId, err := strconv.Atoi(c.Param("photoId"))
+		photoID, err := strconv.Atoi(c.Param("photoID"))
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 				"error":   "Bad Request",
@@ -26,7 +26,7 @@ func PhotoAuthorization() gin.HandlerFunc {
 
 		Photo := models.Photo{}
 
-		err = db.Select("user_id").First(&Photo, uint(photoId)).Error
+		err = db.Select("user_id").First(&Photo, uint(photoID)).Error
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 				"error":   "Data Not Found",

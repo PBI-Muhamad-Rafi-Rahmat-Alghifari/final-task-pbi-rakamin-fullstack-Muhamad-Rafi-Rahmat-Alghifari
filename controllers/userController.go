@@ -103,9 +103,7 @@ func EditUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":       User.ID,
-		"email":    User.Email,
-		"username": User.Username,
+		"message": "Your account has been successfully updated",
 	})
 }
 
